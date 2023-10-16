@@ -1,4 +1,5 @@
 import numpy as np
+import unittest
 
 #逆伝播の自動化(再帰)
 
@@ -12,6 +13,8 @@ class Variable:
         self.creator = func
 
     def backward(self):
+        if self.grad is None:
+            self.grad = np.ones_like(self.data) #dy/dyの自動追加
         funcs = [self.creator]
         while funcs:
             f = funcs.pop() #関数を取得
@@ -21,11 +24,16 @@ class Variable:
             if x.creator is not None:
                 funcs.append(x.creator)
 
+def as_array(x):
+    if np.isscalar(x): #スカラ系の型を判定
+        return np.array(x)
+    return x
+
 class Function:
     def __call__(self, input):
         x = input.data
         y = self.forward(x)
-        output = Variable(y)
+        output = Variable(as_array(y))
         output.set_creator(self) #出力変数に生みの親を覚えさせる。
         self.input = input
         self.output = output #出力も覚える
@@ -60,8 +68,16 @@ def numerical_diff(f, x, eps = 1e-4):
     y0 = f(x0)
     y1 = f(x1)
     return (y1.data - y0.data) / (2*eps)
+def square(x):
+    f = Square()
+    return f(x)
+
+def exp(x):
+    f = Exp()
+    return f(x)
 
 
+#Square
 #合成関数の微分
 A = Square()
 B = Exp()
@@ -69,9 +85,7 @@ C = Square()
 
 #順伝搬
 x = Variable(np.array(0.5))
-a = A(x)
-b = B(a)
-y = C(b)
+y = square(exp(square(x)))  #関数化するとまとめて書くこともできる！
 
 #逆伝播
 y.grad = np.array(1.0)

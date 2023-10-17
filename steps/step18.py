@@ -1,6 +1,7 @@
 import numpy as np
 import unittest
 import weakref
+import contextlib
 
 #複雑な計算グラフ
 
@@ -22,7 +23,8 @@ class Variable:
     def cleargrad(self):
         self.grad = None
 
-    def backward(self):
+    #retain_gradがTrueのときすべての変数が勾配を保存
+    def backward(self, retain_grad=False):
         if self.grad is None:
             self.grad = np.ones_like(self.data) #dy/dyの自動追加
 
@@ -52,6 +54,10 @@ class Variable:
                 if x.creator is not None:
                     add_func(x.creator)
 
+            if not retain_grad:
+                for y in f.outputs:
+                    y().grad = None
+
 def as_array(x):
     if np.isscalar(x): #スカラ系の型を判定
         return np.array(x)
@@ -65,10 +71,10 @@ class Function:
         if not isinstance(ys, tuple):
             ys = (ys,)
         outputs = [Variable(as_array(y)) for y in ys] #リスト内包表記
-
-        self.generation = max([x.generation for x in inputs])
-        for output in outputs:
-            output.set_creator(self)
+        if Config.enable_backprop:
+            self.generation = max([x.generation for x in inputs])
+            for output in outputs:
+                output.set_creator(self)
         self.inputs = inputs
         self.outputs = [weakref.ref(output) for output in outputs] #弱参照を作り循環をなくす
         return outputs if len(outputs) > 1 else outputs[0]
@@ -78,6 +84,9 @@ class Function:
     def backward(self, gys):
         raise NotImplementedError()
 
+#インスタンス化しない
+class Config:
+    enable_backprop = True
 #継承
 class Square(Function):
     def forward(self, x):
@@ -121,11 +130,17 @@ def exp(x):
     f = Exp()
     return f(x)
 
+@contextlib.contextmanager
+def using_config(name, value):
+    old_value = getattr(Config, name)
+    setattr(Config, name, value)
+    try:
+        yield
+    finally:
+        setattr(Config, name, old_value)
+def no_grad():
+    return using_config('enable_backprop', False)
 
-x = Variable(np.array(2.0))
-a = square(x)
-y = add(square(a), square(a))
-y.backward()
-
-print(y.data)
-print(x.grad)
+with using_config('enable_backprop', False):
+    x = Variable(np.array(2.0))
+    y = square(x)

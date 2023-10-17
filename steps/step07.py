@@ -5,8 +5,9 @@ class Variable:
     def __init__(self, data):
         self.data = data
         self.grad = None #微分した値
-        self.creator = None #関数の出力結果
+        self.creator = None #生みの親の要素
 
+    #生みの親をセットする
     def set_creator(self, func):
         self.creator = func
 

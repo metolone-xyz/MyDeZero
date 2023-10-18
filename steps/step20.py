@@ -122,8 +122,8 @@ class Config:
     enable_backprop = True
 
 class Mul(Function):
-    def forward(self, x0, x1):
-        y = x0 * x1
+    def forward(self, gy):
+        x0, x1 = self.inputs
         return y
     def backward(self, gy):
         x0, x1 = self.inputs[0].data, self.inputs[1].data

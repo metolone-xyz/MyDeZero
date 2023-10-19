@@ -75,7 +75,7 @@ class Transpose(Function):
         return y
 
     def backward(self, gy):
-        gx = np.transpose(gy)
+        gx = transpose(gy)
         return gx
 
 def transpose(x):

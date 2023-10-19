@@ -54,6 +54,10 @@ class Variable:
     def dtype(self):
         return self.data.dtype
 
+    @property
+    def T(self):
+        return dezero.functions.transpose(self)
+
     def __len__(self):
         return len(self.data)
 
@@ -74,6 +78,9 @@ class Variable:
         if len(shape) == 1 and isinstance(shape[0], (tuple, list)):
             shape = shape[0]
         return dezero.functions.reshape(self, shape)
+
+    def transpose(self):
+        return dezero.functions.transpose(self)
 
     def backward(self, retain_grad=False, create_graph=False):
         if self.grad is None:

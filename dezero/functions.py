@@ -1,10 +1,10 @@
 import numpy as np
 from dezero.core import Function
+from dezero.core import as_variable
 
 class Sin(Function):
     def forward(self, x):
-        xp = cuda.get_array_module(x)
-        y = xp.sin(x)
+        y = np.sin(x)
         return y
 
     def backward(self, gy):
@@ -18,8 +18,7 @@ def sin(x):
 
 class Cos(Function):
     def forward(self, x):
-        xp = cuda.get_array_module(x)
-        y = xp.cos(x)
+        y = np.cos(x)
         return y
 
     def backward(self, gy):
@@ -44,4 +43,24 @@ class Tanh(Function):
 
 def tanh(x):
     return Tanh()(x)
+
+
+
+class Reshape(Function):
+    def __init__(self, shape):
+        self.shape = shape  #変形する形状をshapeで受け取る。
+
+    def forward(self, x):
+        self.x_shape = x.shape
+        #reshape関数・・・Numpyの関数で形状変更
+        y = x.reshape(self.shape)
+        return y
+
+    def backward(self, gy):
+        return reshape(gy, self.x_shape)
+
+def reshape(x, shape):
+    if x.shape == shape:
+        return as_variable(x)   #Variableインスタンスへ変換
+    return Reshape(shape)(x)
 

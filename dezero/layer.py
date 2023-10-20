@@ -7,7 +7,7 @@ import numpy as np
 
 class Layer:
     def __init__(self):
-        self.params = set()
+        self._params = set()
 
     def __setattr__(self, name, value):
         if isinstance(value, Parameter):
@@ -36,7 +36,7 @@ class Layer:
 class Linear(Layer):
     def __init__(self, out_size, nobias=False, dtype=np.float32, in_size=None):
         super().__init__()
-        self.in_size = out_size
+        self.in_size = in_size
         self.out_size = out_size
         self.dtype = dtype
 
@@ -44,10 +44,10 @@ class Linear(Layer):
         if self.in_size is not None:
             self._init_W()
 
-            if nobias:
-                self.b = None
-            else:
-                self.b = Parameter(np.zeros(out_size, dtype=dtype), name='b')
+        if nobias:
+            self.b = None
+        else:
+            self.b = Parameter(np.zeros(out_size, dtype=dtype), name='b')
 
     def _init_W(self):
         I, O = self.in_size, self.out_size

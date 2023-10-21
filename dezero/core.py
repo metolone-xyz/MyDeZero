@@ -273,6 +273,8 @@ def pow(x, c):
     return Pow(c)(x)
 
 
+
+
 def setup_variable():
     Variable.__add__ = add
     Variable.__radd__ = add

@@ -17,9 +17,10 @@ test_set = dezero.datasets.MNIST(train=False)
 train_loader = DataLoader(train_set, batch_size)
 test_loader = DataLoader(test_set, batch_size, shuffle=False)
 
-model = MLP((hidden_size, 10))
+#model = MLP((hidden_size, 10))
+
+model = MLP((hidden_size, hidden_size, 10), activation=F.relu)
 optimizer = optimizers.SGD().setup(model)
-#model = MLP((hidden_size, hidden_size, 10), activation=F.relu)
 #optimizer = optimizers.Adam().setup(model)
 
 for epoch in range(max_epoch):

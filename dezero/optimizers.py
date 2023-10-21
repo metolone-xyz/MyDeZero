@@ -1,3 +1,4 @@
+import math
 
 #最適化を行う基底クラス
 class Optimizer:
@@ -43,10 +44,11 @@ class MomentumSGD(Optimizer):
     def update_one(self, param):
         v_key = id(param)
         if v_key not in self.vs:
-            xp = cuda.get_array_module(param.data)
+            xp = param.data
             self.vs[v_key] = xp.zeros_like(param.data)
 
         v = self.vs[v_key]
         v *= self.momentum
         v -= self.lr * param.grad.data
         param.data += v
+

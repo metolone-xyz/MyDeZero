@@ -1,7 +1,7 @@
 import numpy as np
-from dezero.core import Function
-from dezero.core import as_variable
+import dezero
 from dezero import utils
+from dezero.core import Function, Variable, as_variable, as_array
 
 
 class Sin(Function):
@@ -69,6 +69,7 @@ def reshape(x, shape):
         return as_variable(x)  # Variableインスタンスへ変換
     return Reshape(shape)(x)
 
+
 # 転置行列
 class Transpose(Function):
     def forward(self, x):
@@ -79,8 +80,10 @@ class Transpose(Function):
         gx = transpose(gy)
         return gx
 
+
 def transpose(x):
     return Transpose()(x)
+
 
 class Sum(Function):
     def __init__(self, axis, keepdims):
@@ -100,6 +103,7 @@ class Sum(Function):
 def sum(x, axis=None, keepdims=False):
     return Sum(axis, keepdims)(x)
 
+
 class BroadcastTo(Function):
     def __init__(self, shape):
         self.shape = shape
@@ -113,10 +117,12 @@ class BroadcastTo(Function):
         gx = sum_to(gy, self.x_shape)
         return gx
 
+
 def broadcast_to(x, shape):
     if x.shape == shape:
         return as_variable(x)
     return BroadcastTo(shape)(x)
+
 
 class SumTo(Function):
     def __init__(self, shape):
@@ -137,6 +143,7 @@ def sum_to(x, shape):
         return as_variable(x)
     return SumTo(shape)(x)
 
+
 class MatMul(Function):
     def forward(self, x, W):
         y = x.dot(W)
@@ -152,22 +159,25 @@ class MatMul(Function):
 def matmul(x, W):
     return MatMul()(x, W)
 
+
 class MeanSquaredError(Function):
     def forward(self, x0, x1):
         diff = x0 - x1
-        y = (diff**2).sum()/len(diff)
+        y = (diff ** 2).sum() / len(diff)
         return y
 
     def backward(self, gy):
         x0, x1 = self.inputs
         diff = x0 - x1
         gy = broadcast_to(gy, diff.shape)
-        gx0 = gy * diff *(2. / len(diff))
+        gx0 = gy * diff * (2. / len(diff))
         gx1 = -gx0
         return gx0, gx1
 
+
 def mean_squared_error(x0, x1):
     return MeanSquaredError()(x0, x1)
+
 
 class Linear(Function):
     def forward(self, x, W, b):
@@ -187,6 +197,7 @@ class Linear(Function):
 def linear(x, W, b=None):
     return Linear()(x, W, b)
 
+
 def linear_simple(x, W, b=None):
     x, W = as_variable(x), as_variable(W)
     t = matmul(x, W)
@@ -195,6 +206,7 @@ def linear_simple(x, W, b=None):
     y = t + b
     t.data = None
     return y
+
 
 class Exp(Function):
     def forward(self, x):
@@ -210,11 +222,13 @@ class Exp(Function):
 def exp(x):
     return Exp()(x)
 
-#シグモイド関数
+
+# シグモイド関数
 def sigmoid_simple(x):
     x = as_variable(x)
-    y = 1/(1 + exp(-x))
+    y = 1 / (1 + exp(-x))
     return y
+
 
 class Sigmoid(Function):
     def forward(self, x):
@@ -232,6 +246,7 @@ class Sigmoid(Function):
 def sigmoid(x):
     return Sigmoid()(x)
 
+
 class Log(Function):
     def forward(self, x):
         y = np.log(x)
@@ -245,6 +260,7 @@ class Log(Function):
 
 def log(x):
     return Log()(x)
+
 
 class Softmax(Function):
     def __init__(self, axis=1):
@@ -267,6 +283,7 @@ class Softmax(Function):
 def softmax(x, axis=1):
     return Softmax(axis)(x)
 
+
 class Clip(Function):
     def __init__(self, x_min, x_max):
         self.x_min = x_min
@@ -286,6 +303,7 @@ class Clip(Function):
 def clip(x, x_min, x_max):
     return Clip(x_min, x_max)(x)
 
+
 def softmax_cross_entropy_simple(x, t):
     x, t = as_variable(x), as_variable(t)
     N = x.shape[0]
@@ -296,11 +314,13 @@ def softmax_cross_entropy_simple(x, t):
     y = -1 * sum(tlog_p) / N
     return y
 
+
 def softmax_simple(x, axis=1):
     x = as_variable(x)
     y = exp(x)
     sum_y = sum(y, axis=axis, keepdims=True)
     return y / sum_y
+
 
 class SoftmaxCrossEntropy(Function):
     def forward(self, x, t):
@@ -315,7 +335,7 @@ class SoftmaxCrossEntropy(Function):
         x, t = self.inputs
         N, CLS_NUM = x.shape
 
-        gy *= 1/N
+        gy *= 1 / N
         y = softmax(x)
         # convert to one-hot
         t_onehot = np.eye(CLS_NUM, dtype=t.dtype)[t.data]
@@ -325,3 +345,13 @@ class SoftmaxCrossEntropy(Function):
 
 def softmax_cross_entropy(x, t):
     return SoftmaxCrossEntropy()(x, t)
+
+
+# 正解率を算出する関数
+def accuracy(y, t):
+    y, t = as_variable(y), as_variable(t)
+
+    pred = y.data.argmax(axis=1).reshape(t.shape)
+    result = (pred == t.data)
+    acc = result.mean()
+    return Variable(as_array(acc))

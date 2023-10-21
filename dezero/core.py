@@ -123,6 +123,10 @@ class Variable:
                 for y in f.outputs:
                     y().grad = None  # y is weakref
 
+    def to_cpu(self):
+        return self.data
+
+
 class Parameter(Variable):
     pass
 def as_variable(obj):

@@ -2,7 +2,7 @@ import numpy as np
 from dezero import Variable
 import dezero.functions as F
 import matplotlib.pyplot as plt
-import dezero.layer as L
+import dezero.layers as L
 
 #データセット
 np.random.seed(0)

@@ -33,6 +33,7 @@ else:
     import dezero.layers
     import dezero.optimizers
     import dezero.functions
+    import dezero.functions_conv
     import dezero.transforms
 
 setup_variable()

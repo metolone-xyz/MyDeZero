@@ -1,7 +1,15 @@
 import numpy as np
 import dezero.functions as F
 import dezero.functions_conv as FC
+from dezero import Variable
 
-x1 = np.random.rand(1, 3, 7, 7)
-col1 = FC.im2col(x1, kernel_size=5, stride=1, pad=0, to_matrix=True)
-print(col1.shape)
+N, C, H, W = 1, 5, 15, 15
+OC, (KH, KW) = 8, (3, 3)
+
+x = Variable(np.random.randn(N, C, H, W))
+W = np.random.randn(OC, C, KH, KW)
+y = FC.conv2d_simple(x, W, b=None, stride=1, pad=1)
+y.backward()
+
+print(y.shape)
+print(x.grad.shape)
